@@ -43,6 +43,8 @@ t([]) -> ok.
 
 
 main(File,Worker_nbr) ->
+	register(master, self()),
+
 	Size = filelib:file_size(File),
 	LogLen = round(math:log(Size / ?SORTED_LEN) / math:log(4)),
 
@@ -55,7 +57,8 @@ main(File,Worker_nbr) ->
 		end),
 
 	Sink = spawn(?MODULE,merge_sa,[self(),Prefs]),
-	lists:foreach(fun(_) -> spawn(worker,sa,[self(),Sink,File]) end, lists:seq(1,Worker_nbr)),
+	%lists:foreach(fun(_) -> spawn(worker,sa,[self(),Sink,File]) end, lists:seq(1,Worker_nbr)),
+	send_fileinfo(File,Sink,Worker_nbr),
 	send_prefs(Prefs,Worker_nbr),
 	receive SA -> [Size|SA] end.
 
@@ -80,6 +83,16 @@ send_prefs([],Worker_nbr) ->
 
 
 
+send_fileinfo(_File,_Sink,0) -> 
+	ok;
+send_fileinfo(File,Sink,Worker_nbr) ->
+	receive
+		{init, Pid} ->
+			Pid ! {File,Sink},
+			send_fileinfo(File,Sink,Worker_nbr-1);
+		Error ->
+			throw(Error)
+	end.
 
 merge_sa(Pid,Prefs) -> 
 	%io:format(" SINK: started~n"),
