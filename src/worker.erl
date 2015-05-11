@@ -5,13 +5,27 @@
 %
 
 -module(worker).
--export([start_link/3]).
+-export([start_link/1]).
 -export([
-		sa/3
+		sa/1, sa/3
 		]).
 
-start_link(Fan,Sink,File) ->
-  spawn_link(?MODULE, sa, [Fan,Sink,File]).
+start_link(Fan) ->
+  Pid = spawn_link(?MODULE, sa, [Fan]),
+  true = is_pid(Pid),
+  {ok, Pid}.
+
+sa({Name, Node}) ->
+  Fan = rpc:call(Node, erlang, whereis, [Name]),
+  true = is_pid(Fan), 
+  Fan ! {init, self()},
+  receive
+    {File, Sink} ->
+      sa(Fan,Sink,File)
+    after 5000 ->
+      throw(fan_timeout)
+  end.
+    
 
 sa(Fan,Sink,File) ->
 	%% read file and create Bin and sort fun
