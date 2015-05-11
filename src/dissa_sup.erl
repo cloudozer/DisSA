@@ -24,6 +24,6 @@ start_link() ->
 
 init([]) ->
     {ok, { {one_for_one, 5, 10}, [
-      ?CHILD(worker, worker, [{master, 'master@45.55.128.168'}])
+      ?CHILD(worker_sa, worker, [{master, 'master@45.55.128.168'}])
     ]} }.
 
