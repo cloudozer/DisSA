@@ -43,7 +43,7 @@ scan(Prefix,Bin) ->
 	case lists:last(Prefix) of
 		$$ -> 
 			LastPart = binary:part( Bin,{byte_size(Bin),1-length(Prefix)} ),
-			io:format("LastPart:~p~n",[LastPart]),
+			%io:format("LastPart:~p~n",[LastPart]),
 			case list_to_binary(lists:droplast(Prefix)) of 
 				LastPart -> [size(Bin)+1-length(Prefix)];
 				_ -> []
@@ -52,7 +52,7 @@ scan(Prefix,Bin) ->
 	end.
 
 scan(Prefix,<<>>,_,_,Acc) -> 
-	io:format("WORKER: sequence for ~p scanned. Contains ~p elements~n",[Prefix,length(Acc)]),
+	%io:format("WORKER: sequence for ~p scanned. Contains ~p elements~n",[Prefix,length(Acc)]),
 	Acc;
 scan(Prefix,<<S,Bin/binary>>,[S|Rest],N,Acc) -> scan(Prefix,Bin,Prefix,N+1, case match(Bin,Rest) of
 																				true -> [N|Acc];
