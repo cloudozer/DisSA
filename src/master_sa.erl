@@ -58,8 +58,7 @@ main(File,Worker_nbr) ->
 
 	Sink = spawn(?MODULE,merge_sa,[self(),Prefs]),
 	%lists:foreach(fun(_) -> spawn(worker,sa,[self(),Sink,File]) end, lists:seq(1,Worker_nbr)),
-	send_fileinfo(File,Sink,Worker_nbr),
-	send_prefs(Prefs,Worker_nbr),
+	send_prefs(Prefs,File,Sink,Worker_nbr),
 	receive SA -> [Size|SA] end.
 
 
@@ -71,28 +70,21 @@ get_pref6() -> [ [B1,B2,B3,B4,B5,B6] || B1<-"ACGT",B2<-"ACGT",B3<-"ACGT",B4 <-"A
 
 
 
-send_prefs([Prefix|Prefs],Worker_nbr) -> 
-	receive {Worker_pid,ready} -> Worker_pid ! Prefix end,
+send_prefs([Prefix|Prefs],File,Sink,Worker_nbr) -> 
+	receive 
+		{Worker_pid,ready} -> Worker_pid ! Prefix;
+		{init, Pid} -> Pid ! {File,Sink}
+	end,
 	io:format(" FAN: prefix ~p sent~n",[Prefix]),
-	send_prefs(Prefs,Worker_nbr);
-send_prefs([],0) -> 
+	send_prefs(Prefs,File,Sink,Worker_nbr);
+send_prefs([],_,_,0) -> 
 	io:format("All prefixes distributed~n");
-send_prefs([],Worker_nbr) -> 
+send_prefs([],File,Sink,Worker_nbr) -> 
 	receive {Worker_pid,ready} -> Worker_pid ! stop end,
-	send_prefs([],Worker_nbr-1).
+	send_prefs([],File,Sink,Worker_nbr-1).
 
 
 
-send_fileinfo(_File,_Sink,0) -> 
-	ok;
-send_fileinfo(File,Sink,Worker_nbr) ->
-	receive
-		{init, Pid} ->
-			Pid ! {File,Sink},
-			send_fileinfo(File,Sink,Worker_nbr-1);
-		Error ->
-			throw(Error)
-	end.
 
 merge_sa(Pid,Prefs) -> 
 	%io:format(" SINK: started~n"),
