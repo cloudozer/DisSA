@@ -4,7 +4,7 @@
 % Cloudozer(c), 2015
 %
 
--module(master).
+-module(master_sa).
 -export([
 		t/0,
 		main/2,

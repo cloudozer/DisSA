@@ -4,7 +4,7 @@
 % Cloudozer(c), 2015
 %
 
--module(worker).
+-module(worker_sa).
 -export([start_link/1]).
 -export([
 		sa/1, sa/3
@@ -29,7 +29,7 @@ sa({Name, Node}) ->
 
 sa(Fan,Sink,File) ->
 	%% read file and create Bin and sort fun
-	{ok,Bin} = file:read_file(File),
+	{ok,Bin} = file:read_file(filename:join(code:priv_dir(dissa), File)),
 	Size = size(Bin),
 	Bin_index = fun(N) when N < Size -> binary:at(Bin, N); (_) -> $$ end,
 	F = fun(F,X1,X2) -> V1 = Bin_index(X1), V2 = Bin_index(X2),
