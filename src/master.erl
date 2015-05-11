@@ -45,7 +45,7 @@ t([]) -> ok.
 main(File,Worker_nbr) ->
 	register(master, self()),
 
-	Size = filelib:file_size(File),
+	Size = filelib:file_size(filename:join("priv", File)),
 	LogLen = round(math:log(Size / ?SORTED_LEN) / math:log(4)),
 
 	Prefs = lists:sort(fun(A,B)-> A>B end,
