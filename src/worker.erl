@@ -5,11 +5,13 @@
 %
 
 -module(worker).
+-export([start_link/3]).
 -export([
 		sa/3
 		]).
 
-
+start_link(Fan,Sink,File) ->
+  spawn_link(?MODULE, sa, [Fan,Sink,File]).
 
 sa(Fan,Sink,File) ->
 	%% read file and create Bin and sort fun
