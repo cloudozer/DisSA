@@ -20,7 +20,7 @@ sa(Fan,Sink,File) ->
 						case V1 =:= V2 of true -> F(F,X1+1,X2+1); _ -> V1 < V2 end
 		end,	
 	Compare = fun(Shift,Ls) -> 
-				lists:sort(fun(X1,X2) -> F(F,X1+Shift,X2+Shift) end,Ls) 
+				lists:sort(fun({_,_,X1},{_,_,X2}) -> F(F,X1+Shift,X2+Shift) end,Ls) 
 	   		  end,
 		
 
@@ -48,17 +48,15 @@ scan(Prefix,Bin) ->
 				LastPart -> [size(Bin)+1-length(Prefix)];
 				_ -> []
 			end;
-		_ -> scan(Prefix,Bin,Prefix,0,[])
+		_ -> scan(Prefix,Bin,Prefix,$$,0,[])
 	end.
 
-scan(Prefix,<<>>,_,_,Acc) -> 
-	%io:format("WORKER: sequence for ~p scanned. Contains ~p elements~n",[Prefix,length(Acc)]),
-	Acc;
-scan(Prefix,<<S,Bin/binary>>,[S|Rest],N,Acc) -> scan(Prefix,Bin,Prefix,N+1, case match(Bin,Rest) of
-																				true -> [N|Acc];
+scan(_,<<>>,_,_,_,Acc) -> Acc;
+scan(Prefix,<<S,Bin/binary>>,[S|Rest],Prev,N,Acc) -> scan(Prefix,Bin,Prefix,S,N+1, case match(Bin,Rest) of
+																				true -> [{S,Prev,N}|Acc];
 																				_ -> Acc
 																			end);
-scan(Prefix,<<_,Bin/binary>>,_,N,Acc) -> scan(Prefix,Bin,Prefix,N+1,Acc).
+scan(Prefix,<<S,Bin/binary>>,_,_,N,Acc) -> scan(Prefix,Bin,Prefix,S,N+1,Acc).
 
 
 match(Bin,Str) when size(Bin) < length(Str) -> false; 

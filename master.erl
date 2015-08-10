@@ -11,14 +11,14 @@
 		merge_sa/2
 		]).
 
--define(SORTED_LEN,200000).
+-define(SORTED_LEN,150000).
 
 
 
 t() -> 
 	Tests = [
 		"21"
-		%"GL000207.1",
+		%"GL000207.1"
 		%"GL000226.1",
 		%"GL000229.1",
 		%"GL000231.1",
@@ -33,9 +33,12 @@ t() ->
 	t(Tests).
 
 t([Chromo|Tests]) ->
+	statistics(wall_clock),
 	File = "data/"++Chromo++".ref",
 	Worker_nbr = 5,
 	main(File,Worker_nbr),
+	{_,T} = statistics(wall_clock),
+	io:format("SA construction took ~p secs~n",[T/1000]),
 	%{ok,Bin} = file:read_file(File),
 	%io:format("Test passed: ~p~n",[DSA1==sa(binary_to_list(Bin))]),
 	t(Tests);
@@ -44,7 +47,11 @@ t([]) -> ok.
 
 main(File,Worker_nbr) ->
 	Size = filelib:file_size(File),
-	LogLen = round(math:log(Size / ?SORTED_LEN) / math:log(4)),
+	case  Size < ?SORTED_LEN of
+		true -> LogLen = 0;
+		false-> LogLen = round(math:log(Size / ?SORTED_LEN) / math:log(4))
+	end,
+	
 
 	Prefs = lists:sort(fun(A,B)-> A>B end,
 		if
@@ -95,17 +102,4 @@ merge_sa(Pid,[],Acc) -> Pid ! Acc.
 
 
 
-sa(X) -> [ N || {_,N,_} <- lists:sort(get_suffs(X)) ].
-
-
-
-get_suffs(X) ->
-	X1 = lists:reverse([$$|lists:reverse(X)]),
-	get_suffs([],0,X1,$$).
-
-get_suffs(Acc, N, [H|X],P) ->
-	get_suffs([{[H|X],N,P}|Acc], N+1, X, H);
-get_suffs(Acc,_,[],_) -> 
-	%io:format("Suffices:~n~p~n",[Acc]),
-	Acc.
 
